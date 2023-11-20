@@ -26,9 +26,9 @@ function fake_pay_init_gateway_class() {
                 $this->title = $this->get_option( 'title' );
                 $this->description = $this->get_option( 'description' );
 
-                if(!current_user_can('administrator')) {
-                    $this->enabled = false;
-                }
+                // if(!current_user_can('administrator')) {
+                //     $this->enabled = false;
+                // }
 
                 add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
             }
@@ -72,7 +72,7 @@ function fake_pay_init_gateway_class() {
                 $order->payment_complete();
                 // $order->reduce_order_stock();
                 // $order->update_status( 'processing' );
-                $order->add_order_note( 'Paid via Fake Pay', true );
+                // $order->add_order_note( 'Paid via Fake Pay', true );
 
                 // Remove cart
                 $woocommerce->cart->empty_cart();
@@ -80,9 +80,8 @@ function fake_pay_init_gateway_class() {
                 // Return thankyou redirect
                 return array(
                     'result' => 'success',
-                    'redirect' => home_url('?fakepay=' . $order->get_id() )
+                    'redirect' => $this->get_return_url( $order )
                 );
-                // $this->get_return_url( $order )
             }
         }
     }
@@ -95,29 +94,10 @@ function fake_pay_add_gateway_class( $methods ) {
 
 
 add_action('init', function() {
-    if( isset($_GET['fakepay']) && is_numeric($_GET['fakepay']) ) {
-        if( isset($_GET['act']) ) {
-            $order = wc_get_order($_GET['fakepay']);
-
-            if( $_GET['act'] == 'success' ) {
-                $order->payment_complete();
-                $order->add_order_note( 'Paid via Fake Pay', true );
-                WC()->cart->empty_cart();
-                wp_safe_redirect($order->get_checkout_order_received_url());
-                die();
-            }
-
-            if( $_GET['act'] == 'failed' ) {
-                $order->update_status('failed', 'Pay via Fake Pay');
-                $order->save();
-            }
-        }
-        echo sprintf(
-            '<a href="%s">Success</a><hr /><a href="%s">Failed</a>',
-            home_url('?fakepay=choose&act=success'),
-            home_url('?fakepay=choose&act=failed')
-        );
-
-        die();
+    if( isset($_GET['altmail']) ) {
+        $processing_email_footers = get_field('footer_processing_mail','option')??array();
+        echo '<pre>';
+        print_r($processing_email_footers);
+        echo '</pre>';
     }
 });
